@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Tic Tac Toe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <header>
+            <h1>NEON TIC TAC TOE</h1>
+            <p class="tagline">The ultimate strategy experience with advanced AI</p>
+        </header>
+
+        <div class="game-container">
+            <div class="game-board">
+                <div id="container">
+                    <div class="box top left" id="box1">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                    <div class="box top" id="box2">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                    <div class="box top right" id="box3">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                    <div class="box left" id="box4">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                    <div class="box" id="box5">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                    <div class="box right" id="box6">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                    <div class="box left bottom" id="box7">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                    <div class="box bottom" id="box8">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                    <div class="box right bottom" id="box9">
+                        <span data-player="none" onclick="play(this)">&nbsp;</span>
+                    </div>
+                </div>
+                <div id="win-line"></div>
+            </div>
+
+            <div class="game-info">
+                <div class="score-board">
+                    <div class="player-score player-x">
+                        <div>Player X</div>
+                        <div class="score-value" id="score-x">0</div>
+                    </div>
+                    <div class="player-score player-o">
+                        <div>Player O</div>
+                        <div class="score-value" id="score-o">0</div>
+                    </div>
+                </div>
+
+                <div class="current-player">
+                    <span class="player-indicator player-x-indicator"></span>
+                    <span id="turn-indicator">Player X's Turn</span>
+                </div>
+
+                <div class="game-mode">
+                    <button class="mode-btn active" onclick="setGameMode('pvp')" type="button">Player vs Player</button>
+                    <button class="mode-btn" onclick="setGameMode('ai')" type="button">vs Computer</button>
+                </div>
+
+                <div class="difficulty">
+                    <label for="ai-difficulty">AI Difficulty:</label>
+                    <select id="ai-difficulty" class="difficulty-select">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard (Unbeatable)</option>
+                    </select>
+                </div>
+
+                <div class="thinking" id="thinking">AI is thinking...</div>
+
+                <div class="controls">
+                    <button onclick="playAgain()" type="button">
+                        <i class="fas fa-redo"></i> Restart Game
+                    </button>
+                    <button onclick="showSettings()" type="button">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                </div>
+
+                <div class="history">
+                    <h3>Game History</h3>
+                    <ul class="history-list" id="history-list">
+                        <li>Game started <span>Just now</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p class="footer-text">
+                © Neon Tic Tac Toe | Designed with
+                <i class="fa-solid fa-heart heart-icon" aria-hidden="true"></i>
+            </p>
+
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
