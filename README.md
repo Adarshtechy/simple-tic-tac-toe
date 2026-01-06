@@ -1,18 +1,14 @@
-## NeonTacToe
+## NeonTicTacToe
 
 A **modern neon-styled Tic-Tac-Toe game** built using pure web technologies.  
 Designed with a glowing UI, smooth interactions, and clean game logic — perfect for learning and showcasing frontend skills.
 
 ## ✨ Features
 
-- 🎮 Classic Tic-Tac-Toe gameplay
-- 
+- 🎮 Classic Tic-Tac-Toe gameplay 
 - ✨ Neon glow UI with smooth animations
-- 
 - 🧠 Intelligent game logic (AI)
-- 
 - 📱 Fully responsive design
-- 
 - 🔄 Restart & score tracking support
 
 ## 🎮 How to Play
@@ -36,15 +32,14 @@ Designed with a glowing UI, smooth interactions, and clean game logic — perfec
 ---
 
 ## 📁 Project Structure
-
+```
+neon-tic-tac-toe
+|
 ├── index.html # Main HTML file
-
 ├── style.css # Neon UI styling
-
 ├── script.js # Game logic
-
 └── README.md # Documentation
-
+```
 
 ---
 
@@ -52,8 +47,8 @@ Designed with a glowing UI, smooth interactions, and clean game logic — perfec
 
 1. ### Clone the repository
 ```bash
-git clone https://github.com/Adarshtechy/NeonTacToe.git
-cd NeonTacToe
+git clone https://github.com/Adarshtechy/neon-tic-tac-toe.git
+cd neon-tic-tac-toe
 ```
 2. Run the project
    - Open index.html directly in your browser
