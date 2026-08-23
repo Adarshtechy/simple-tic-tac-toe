@@ -4,112 +4,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Tic Tac Toe</title>
+    <title>Tic Tac Toe</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="particles" id="particles"></div>
 
     <div class="container">
-        <header>
-            <h1>NEON TIC TAC TOE</h1>
-            <p class="tagline">The ultimate strategy experience with advanced AI</p>
+        <!-- Header -->
+        <header class="game-header">
+            <h1>Tic Tac Toe</h1>
+            <p>A simple strategy game</p>
         </header>
 
-        <div class="game-container">
-            <div class="game-board">
+
+        <!-- Game -->
+        <main class="game-container">
+
+            <!-- Board -->
+            <section class="game-board">
                 <div id="container">
-                    <div class="box top left" id="box1">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
-                    <div class="box top" id="box2">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
-                    <div class="box top right" id="box3">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
-                    <div class="box left" id="box4">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
-                    <div class="box" id="box5">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
-                    <div class="box right" id="box6">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
-                    <div class="box left bottom" id="box7">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
-                    <div class="box bottom" id="box8">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
-                    <div class="box right bottom" id="box9">
-                        <span data-player="none" onclick="play(this)">&nbsp;</span>
-                    </div>
+                    <button class="box" id="box1" data-index="0" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
+
+                    <button class="box" id="box2" data-index="1" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
+
+                    <button class="box" id="box3" data-index="2" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
+
+                    <button class="box" id="box4" data-index="3" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
+
+                    <button class="box" id="box5" data-index="4" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
+
+                    <button class="box" id="box6" data-index="5" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
+
+                    <button class="box" id="box7" data-index="6" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
+
+                    <button class="box" id="box8" data-index="7" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
+
+                    <button class="box" id="box9" data-index="8" type="button" aria-label="button">
+                        <span data-player="none"></span>
+                    </button>
                 </div>
                 <div id="win-line"></div>
-            </div>
+            </section>
 
-            <div class="game-info">
+
+            <!-- Game Information -->
+            <aside class="game-info">
+
+                <!-- Score -->
                 <div class="score-board">
                     <div class="player-score player-x">
-                        <div>Player X</div>
-                        <div class="score-value" id="score-x">0</div>
+                        <span>Player X</span>
+                        <strong id="score-x">0</strong>
                     </div>
+
                     <div class="player-score player-o">
-                        <div>Player O</div>
-                        <div class="score-value" id="score-o">0</div>
+                        <span id="player-o-name">Player O</span>
+                        <strong id="score-o">0</strong>
                     </div>
                 </div>
 
+
+                <!-- Turn -->
                 <div class="current-player">
-                    <span class="player-indicator player-x-indicator"></span>
-                    <span id="turn-indicator">Player X's Turn</span>
+                    <span class="player-indicator player-x-indicator" id="player-indicator">
+                    </span>
+
+                    <span id="turn-indicator">
+                        Player X's Turn
+                    </span>
+                </div>
+
+
+                <!-- Game Mode -->
+                <div class="section-title">
+                    Game Mode
                 </div>
 
                 <div class="game-mode">
-                    <button class="mode-btn active" onclick="setGameMode('pvp')" type="button">Player vs Player</button>
-                    <button class="mode-btn" onclick="setGameMode('ai')" type="button">vs Computer</button>
+                    <button class="mode-btn active" id="pvp-btn" type="button">
+                        Player vs Player
+                    </button>
+
+                    <button class="mode-btn" id="ai-btn" type="button">
+                        vs Computer
+                    </button>
                 </div>
 
-                <div class="difficulty">
-                    <label for="ai-difficulty">AI Difficulty:</label>
+
+                <!-- Difficulty -->
+                <div class="difficulty" id="difficulty-container">
+                    <label for="ai-difficulty">
+                        AI Difficulty
+                    </label>
+
                     <select id="ai-difficulty" class="difficulty-select">
-                        <option value="easy">Easy</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="hard">Hard (Unbeatable)</option>
+                        <option value="easy">
+                            Easy
+                        </option>
+
+                        <option value="medium" selected>
+                            Medium
+                        </option>
+
+                        <option value="hard">
+                            Hard
+                        </option>
                     </select>
                 </div>
 
-                <div class="thinking" id="thinking">AI is thinking...</div>
 
+                <!-- Thinking -->
+                <div class="thinking" id="thinking">
+                    Computer is thinking...
+                </div>
+
+
+                <!-- Controls -->
                 <div class="controls">
-                    <button onclick="playAgain()" type="button">
-                        <i class="fas fa-redo"></i> Restart Game
-                    </button>
-                    <button onclick="showSettings()" type="button">
-                        <i class="fas fa-cog"></i> Settings
+                    <button id="restart-btn" type="button">
+                        <i class="fas fa-rotate-right"></i>
+                        Restart Game
                     </button>
                 </div>
 
+
+                <!-- History -->
                 <div class="history">
                     <h3>Game History</h3>
                     <ul class="history-list" id="history-list">
-                        <li>Game started <span>Just now</span></li>
+                        <li>
+                            <span>Game started</span>
+                            <span>Just now</span>
+                        </li>
                     </ul>
                 </div>
-            </div>
-        </div>
+            </aside>
+        </main>
 
+
+        <!-- Footer -->
         <footer>
-            <p class="footer-text">
-                © Neon Tic Tac Toe | Designed with
-                <i class="fa-solid fa-heart heart-icon" aria-hidden="true"></i>
+            <p>
+                © Tic Tac Toe
+                <span>•</span>
+                Designed with
+                <i class="fa-solid fa-heart heart-icon"></i>
+            </p>
+        </footer>
+    </div>
+
+
+    <!-- Game Result Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="result-modal">
+            <div class="result-icon" id="result-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+
+            <h2 id="result-title">
+                Player X Wins!
+            </h2>
+
+            <p id="result-message">
+                Congratulations!
             </p>
 
-        </footer>
+            <button id="play-again-btn" type="button">
+                <i class="fas fa-play"></i>
+                Play Again
+            </button>
+        </div>
     </div>
 
     <script src="script.js"></script>
