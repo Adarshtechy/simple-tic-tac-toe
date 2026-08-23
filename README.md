@@ -51,12 +51,12 @@ Play against another player on the same device.
 
 <b>Player vs Computer</b>
 Play against the computer with three difficulty levels:
-Easy
-Medium
+Easy,
+Medium,
 Hard
 
 # Responsive Design
 The game is designed to work across different screen sizes, including:
-Desktop
-Tablet
+Desktop,
+Tablet,
 Mobile
