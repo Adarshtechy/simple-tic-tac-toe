@@ -1,459 +1,549 @@
-// Game state variables
-        let playerTurn = "x";
-        let moves = 0;
-        let isGameOver = false;
-        let gameMode = "pvp"; // 'pvp' or 'ai'
-        let scores = { x: 0, o: 0 };
-        let gameHistory = [];
-        let aiDifficulty = "medium";
-        
-        // DOM elements
-        const boxes = document.querySelectorAll(".box span");
-        const turnIndicator = document.getElementById("turn-indicator");
-        const scoreX = document.getElementById("score-x");
-        const scoreO = document.getElementById("score-o");
-        const historyList = document.getElementById("history-list");
-        const modeButtons = document.querySelectorAll(".mode-btn");
-        const difficultySelect = document.getElementById("ai-difficulty");
-        const thinkingIndicator = document.getElementById("thinking");
-        const particlesContainer = document.getElementById("particles");
-        const winLineContainer = document.getElementById("win-line");
+/* Game State */
+const board = Array(9).fill("");
+let currentPlayer = "X";
+let gameMode = "pvp";
+let aiDifficulty = "medium";
+let gameOver = false;
+let aiThinking = false;
+let scoreX = 0;
+let scoreO = 0;
+let moveCount = 0;
 
-        // Create background particles
-        function createParticles() {
-            for (let i = 0; i < 30; i++) {
-                const particle = document.createElement("div");
-                particle.classList.add("particle");
-                
-                const size = Math.random() * 20 + 5;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                
-                particle.style.left = `${Math.random() * 100}vw`;
-                particle.style.top = `${Math.random() * 100}vh`;
-                
-                const duration = Math.random() * 20 + 10;
-                particle.style.animationDuration = `${duration}s`;
-                
-                particlesContainer.appendChild(particle);
-            }
-        }
+/* DOM Elements */
+const boxes = document.querySelectorAll(".box");
+const scoreXElement = document.getElementById("score-x");
+const scoreOElement = document.getElementById("score-o");
+const turnIndicator = document.getElementById("turn-indicator");
+const playerIndicator = document.getElementById("player-indicator");
+const playerOName = document.getElementById("player-o-name");
+const difficultyContainer = document.getElementById("difficulty-container");
+const difficultySelect = document.getElementById("ai-difficulty");
+const thinkingElement = document.getElementById("thinking");
+const historyList = document.getElementById("history-list");
+const restartButton = document.getElementById("restart-btn");
+const pvpButton = document.getElementById("pvp-btn");
+const aiButton = document.getElementById("ai-btn");
+const modalOverlay = document.getElementById("modal-overlay");
+const resultTitle = document.getElementById("result-title");
+const resultMessage = document.getElementById("result-message");
+const resultIcon = document.getElementById("result-icon");
+const playAgainButton = document.getElementById("play-again-btn");
 
-        // Initialize the game
-        function initGame() {
-            createParticles();
-            resetGame();
-            updateTurnIndicator();
-            updateScores();
-            addToHistory("Game started");
-            
-            // Set up event listeners
-            difficultySelect.addEventListener("change", function() {
-                aiDifficulty = this.value;
-                addToHistory(`AI difficulty set to ${this.value}`);
-            });
-        }
+/* Winning Combinations */
+const winningCombinations = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
 
-        // Play a move
-        function play(element) {
-            if (element.dataset.player !== "none" || isGameOver) return;
-            
-            // Set the move
-            element.innerHTML = playerTurn;
-            element.dataset.player = playerTurn;
-            
-            // Add class for styling
-            if (playerTurn === "x") {
-                element.classList.add("x-move");
-            } else {
-                element.classList.add("o-move");
-            }
-            
-            moves++;
-            
-            // Check for win or draw
-            const winInfo = checkWinner();
-            if (winInfo.win) {
-                drawWinningLine(winInfo.line);
-                gameOver(winInfo.box);
-                return;
-            }
-            
-            if (moves === 9 && !isGameOver) {
-                draw();
-                return;
-            }
-            
-            // Switch player if game is not over
-            if (!isGameOver) {
-                playerTurn = playerTurn === "x" ? "o" : "x";
-                updateTurnIndicator();
-                
-                // If playing against AI and it's AI's turn
-                if (gameMode === "ai" && playerTurn === "o") {
-                    thinkingIndicator.style.display = "block";
-                    setTimeout(makeAIMove, 800);
-                }
-            }
-        }
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
 
-        // Check for a winner
-        function checkWinner() {
-            const winConditions = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-                [0, 4, 8], [2, 4, 6]             // Diagonals
-            ];
-            
-            for (let condition of winConditions) {
-                const [a, b, c] = condition;
-                if (
-                    boxes[a].dataset.player !== "none" &&
-                    boxes[a].dataset.player === boxes[b].dataset.player &&
-                    boxes[a].dataset.player === boxes[c].dataset.player
-                ) {
-                    // Highlight winning boxes
-                    boxes[a].parentElement.classList.add("activeBox");
-                    boxes[b].parentElement.classList.add("activeBox");
-                    boxes[c].parentElement.classList.add("activeBox");
-                    
-                    return { win: true, box: a, line: condition };
-                }
-            }
-            
-            return { win: false };
-        }
+  [0, 4, 8],
+  [2, 4, 6],
+];
 
-        // Draw winning line
-        function drawWinningLine(line) {
-            const [a, b, c] = line;
-            const boxSize = 100;
-            const gap = 15;
-            const container = document.getElementById("container");
-            const rect = container.getBoundingClientRect();
-            
-            // Get positions of the first and last boxes in the winning line
-            const firstBox = boxes[a].parentElement;
-            const lastBox = boxes[c].parentElement;
-            
-            const firstRect = firstBox.getBoundingClientRect();
-            const lastRect = lastBox.getBoundingClientRect();
-            
-            // Calculate line coordinates
-            const startX = firstRect.left - rect.left + firstRect.width / 2;
-            const startY = firstRect.top - rect.top + firstRect.height / 2;
-            const endX = lastRect.left - rect.left + lastRect.width / 2;
-            const endY = lastRect.top - rect.top + lastRect.height / 2;
-            
-            // Calculate line length and angle
-            const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-            const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
-            
-            // Create and position the line
-            const winLine = document.createElement("div");
-            winLine.classList.add("win-line");
-            winLine.style.width = `${length}px`;
-            winLine.style.height = `8px`;
-            winLine.style.left = `${startX}px`;
-            winLine.style.top = `${startY}px`;
-            winLine.style.transform = `rotate(${angle}deg)`;
-            winLine.style.transformOrigin = `0 0`;
-            
-            winLineContainer.appendChild(winLine);
-        }
+/* Board Click Events */
+boxes.forEach((box) => {
+  box.addEventListener("click", () => {
+    const index = Number(box.dataset.index);
 
-        // Game over function
-        function gameOver(winningBox) {
-            isGameOver = true;
-            const winner = boxes[winningBox].dataset.player.toUpperCase();
-            
-            // Update scores
-            scores[winner.toLowerCase()]++;
-            updateScores();
-            
-            // Show alert
-            showAlert(`Player ${winner} Wins!`, `${winner} takes the victory!`);
-            
-            // Add to history
-            addToHistory(`Player ${winner} won`);
-            
-            // If playing against AI, update message accordingly
-            if (gameMode === "ai") {
-                if (winner === "X") {
-                    addToHistory("You defeated the AI!");
-                } else {
-                    addToHistory("AI won the game");
-                }
-            }
-        }
+    handleMove(index);
+  });
+});
 
-        // Draw function
-        function draw() {
-            isGameOver = true;
-            showAlert("It's a Draw!", "No one wins this round.");
-            addToHistory("Game ended in a draw");
-        }
+/* Handle Player One */
+function handleMove(index) {
+  // Game already finished
+  if (gameOver) {
+    return;
+  }
 
-        // Reset the game
-        function resetGame() {
-            boxes.forEach(box => {
-                box.dataset.player = "none";
-                box.innerHTML = "&nbsp;";
-                box.classList.remove("x-move", "o-move");
-                box.parentElement.classList.remove("activeBox", "pulse");
-            });
-            
-            // Clear winning line
-            winLineContainer.innerHTML = "";
-            
-            playerTurn = "x";
-            moves = 0;
-            isGameOver = false;
-            updateTurnIndicator();
-            thinkingIndicator.style.display = "none";
-        }
+  // AI is currently thinking
+  if (aiThinking) {
+    return;
+  }
 
-        // Play again
-        function playAgain() {
-            resetGame();
-            addToHistory("New game started");
-            
-            // Remove alert if exists
-            const alert = document.querySelector(".alert");
-            const overlay = document.querySelector(".overlay");
-            
-            if (alert) {
-                alert.remove();
-                overlay.remove();
-            }
-        }
+  // Square already occupied
+  if (board[index] !== "") {
+    return;
+  }
 
-        // Update turn indicator
-        function updateTurnIndicator() {
-            const indicator = document.querySelector(".player-indicator");
-            indicator.className = "player-indicator";
-            
-            if (playerTurn === "x") {
-                turnIndicator.textContent = gameMode === "ai" ? "Your Turn" : "Player X's Turn";
-                indicator.classList.add("player-x-indicator");
-            } else {
-                turnIndicator.textContent = gameMode === "ai" ? "AI's Turn" : "Player O's Turn";
-                indicator.classList.add("player-o-indicator");
-            }
-        }
+  // Player cannot make O move in AI mode
+  if (gameMode === "ai" && currentPlayer === "O") {
+    return;
+  }
 
-        // Update scores
-        function updateScores() {
-            scoreX.textContent = scores.x;
-            scoreO.textContent = scores.o;
-        }
+  makeMove(index, currentPlayer);
 
-        // Show alert
-        function showAlert(title, message) {
-            // Create overlay
-            const overlay = document.createElement("div");
-            overlay.className = "overlay";
-            document.body.appendChild(overlay);
-            
-            // Create alert
-            const alert = document.createElement("div");
-            alert.className = "alert";
-            alert.innerHTML = `
-                <h2>${title}</h2>
-                <p>${message}</p>
-                <button onclick="playAgain()">
-                    <i class="fas fa-redo"></i> Play Again
-                </button>
-            `;
-            document.body.appendChild(alert);
-        }
+  const result = checkGameResult();
 
-        // Set game mode
-        function setGameMode(mode) {
-            gameMode = mode;
-            
-            // Update mode buttons
-            modeButtons.forEach(btn => {
-                if (btn.onclick.toString().includes(mode)) {
-                    btn.classList.add("active");
-                } else {
-                    btn.classList.remove("active");
-                }
-            });
-            
-            // Reset the game
-            playAgain();
-            
-            // Add to history
-            if (mode === "ai") {
-                addToHistory("Mode: Player vs AI");
-            } else {
-                addToHistory("Mode: Player vs Player");
-            }
-        }
+  if (result) {
+    finishGame(result);
+    return;
+  }
 
-        // Make AI move using minimax algorithm for hard difficulty
-        function makeAIMove() {
-            if (isGameOver) return;
-            
-            thinkingIndicator.style.display = "none";
-            
-            let moveIndex;
-            
-            if (aiDifficulty === "easy") {
-                // Easy: Random moves
-                moveIndex = getRandomMove();
-            } else if (aiDifficulty === "medium") {
-                // Medium: 50% chance of best move, 50% chance of random move
-                moveIndex = Math.random() > 0.5 ? getBestMove() : getRandomMove();
-            } else {
-                // Hard: Always best move (unbeatable)
-                moveIndex = getBestMove();
-            }
-            
-            if (moveIndex !== -1) {
-                play(boxes[moveIndex]);
-            }
-        }
+  switchPlayer();
 
-        // Get a random available move
-        function getRandomMove() {
-            const availableMoves = [];
-            boxes.forEach((box, index) => {
-                if (box.dataset.player === "none") {
-                    availableMoves.push(index);
-                }
-            });
-            
-            if (availableMoves.length > 0) {
-                const randomIndex = Math.floor(Math.random() * availableMoves.length);
-                return availableMoves[randomIndex];
-            }
-            
-            return -1;
-        }
+  // Computer turn
+  if (gameMode === "ai" && currentPlayer === "O") {
+    computerMove();
+  }
+}
 
-        // Get the best move using minimax algorithm
-        function getBestMove() {
-            // Convert NodeList to array for easier manipulation
-            const board = Array.from(boxes).map(box => box.dataset.player);
-            
-            // AI is always 'o'
-            const bestMove = minimax(board, "o").index;
-            return bestMove;
-        }
+/* Make Move */
+function makeMove(index, player) {
+  board[index] = player;
 
-        // Minimax algorithm
-        function minimax(board, player) {
-            // Available moves
-            const availableMoves = getEmptyCells(board);
-            
-            // Check for terminal states
-            if (isWinning(board, "x")) {
-                return { score: -10 };
-            } else if (isWinning(board, "o")) {
-                return { score: 10 };
-            } else if (availableMoves.length === 0) {
-                return { score: 0 };
-            }
-            
-            // Array to collect all moves and scores
-            const moves = [];
-            
-            // Loop through available moves
-            for (let i = 0; i < availableMoves.length; i++) {
-                const move = {};
-                move.index = availableMoves[i];
-                
-                // Make the move
-                board[availableMoves[i]] = player;
-                
-                // Collect score resulting from recursive minimax call
-                if (player === "o") {
-                    const result = minimax(board, "x");
-                    move.score = result.score;
-                } else {
-                    const result = minimax(board, "o");
-                    move.score = result.score;
-                }
-                
-                // Undo the move
-                board[availableMoves[i]] = "none";
-                
-                // Push the move to moves array
-                moves.push(move);
-            }
-            
-            // Choose best move
-            let bestMove;
-            if (player === "o") {
-                // Look for move with highest score
-                let bestScore = -Infinity;
-                for (let i = 0; i < moves.length; i++) {
-                    if (moves[i].score > bestScore) {
-                        bestScore = moves[i].score;
-                        bestMove = i;
-                    }
-                }
-            } else {
-                // Look for move with lowest score
-                let bestScore = Infinity;
-                for (let i = 0; i < moves.length; i++) {
-                    if (moves[i].score < bestScore) {
-                        bestScore = moves[i].score;
-                        bestMove = i;
-                    }
-                }
-            }
-            
-            // Return the best move
-            return moves[bestMove];
-        }
+  moveCount++;
 
-        // Get empty cells
-        function getEmptyCells(board) {
-            return board
-                .map((cell, index) => (cell === "none" ? index : null))
-                .filter(cell => cell !== null);
-        }
+  const box = boxes[index];
+  const span = box.querySelector("span");
 
-        // Check if a player wins
-        function isWinning(board, player) {
-            const winConditions = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-                [0, 4, 8], [2, 4, 6]             // Diagonals
-            ];
-            
-            return winConditions.some(condition => 
-                condition.every(index => board[index] === player)
-            );
-        }
+  span.textContent = player;
+  span.dataset.player = player;
+  span.classList.remove("x-move", "o-move");
 
-        // Add to history
-        function addToHistory(event) {
-            const now = new Date();
-            const time = now.toLocaleTimeString();
-            gameHistory.unshift({ event, time });
-            
-            // Update history list (keep only last 5)
-            if (gameHistory.length > 5) {
-                gameHistory.pop();
-            }
-            
-            // Update UI
-            historyList.innerHTML = "";
-            gameHistory.forEach(item => {
-                const li = document.createElement("li");
-                li.innerHTML = `${item.event} <span>${item.time}</span>`;
-                historyList.appendChild(li);
-            });
-        }
+  if (player === "X") {
+    span.classList.add("x-move");
+  } else {
+    span.classList.add("o-move");
+  }
 
-        // Show settings (placeholder)
-        function showSettings() {
-            showAlert("Settings", "Additional settings would go here. This is a placeholder for demonstration.");
-        }
+  box.disabled = true;
+}
 
-        // Initialize the game when page loads
-        window.onload = initGame;
+/* Switch Player */
+function switchPlayer() {
+  currentPlayer = currentPlayer === "X" ? "O" : "X";
+  updateTurnIndicator();
+}
+
+/* Update Turn UI */
+function updateTurnIndicator() {
+  if (gameMode === "ai") {
+    if (currentPlayer === "X") {
+      turnIndicator.textContent = "Your Turn";
+    } else {
+      turnIndicator.textContent = "Computer's Turn";
+    }
+  } else {
+    turnIndicator.textContent = `Player ${currentPlayer}'s Turn`;
+  }
+
+  playerIndicator.classList.remove("player-x-indicator", "player-o-indicator");
+
+  if (currentPlayer === "X") {
+    playerIndicator.classList.add("player-x-indicator");
+  } else {
+    playerIndicator.classList.add("player-o-indicator");
+  }
+}
+
+/* Check Result */
+function checkGameResult() {
+  for (const combination of winningCombinations) {
+    const [a, b, c] = combination;
+
+    if (board[a] !== "" && board[a] === board[b] && board[a] === board[c]) {
+      return {
+        type: "win",
+        player: board[a],
+        combination,
+      };
+    }
+  }
+
+  // Draw
+  if (moveCount === 9) {
+    return {
+      type: "draw",
+    };
+  }
+
+  return null;
+}
+
+/* Finish Game */
+function finishGame(result) {
+  gameOver = true;
+  aiThinking = false;
+
+  thinkingElement.style.display = "none";
+
+  if (result.type === "win") {
+    highlightWinningCells(result.combination);
+
+    if (result.player === "X") {
+      scoreX++;
+
+      scoreXElement.textContent = scoreX;
+    } else {
+      scoreO++;
+
+      scoreOElement.textContent = scoreO;
+    }
+
+    const winner =
+      gameMode === "ai" && result.player === "O"
+        ? "Computer"
+        : `Player ${result.player}`;
+
+    addHistory(`${winner} won`, "Just now");
+
+    showResult(
+      `${winner} Wins!`,
+      "Great job! You can play another round.",
+      "win",
+    );
+  } else {
+    addHistory("Game ended in a draw", "Just now");
+
+    showResult("It's a Draw!", "Nobody won this round.", "draw");
+  }
+}
+
+/* Highlight Winning Cells */
+function highlightWinningCells(combination) {
+  combination.forEach((index) => {
+    boxes[index].classList.add("activeBox");
+  });
+}
+
+/* Computer Move */
+function computerMove() {
+  aiThinking = true;
+
+  thinkingElement.style.display = "block";
+
+  boxes.forEach((box) => {
+    box.disabled = true;
+  });
+
+  // Small delay makes the AI feel natural
+  setTimeout(() => {
+    if (gameOver) {
+      return;
+    }
+
+    const move = getComputerMove();
+
+    if (move === -1) {
+      aiThinking = false;
+
+      boxes.forEach((box, index) => {
+        box.disabled = board[index] !== "";
+      });
+
+      return;
+    }
+
+    makeMove(move, "O");
+
+    const result = checkGameResult();
+    aiThinking = false;
+    thinkingElement.style.display = "none";
+
+    if (result) {
+      finishGame(result);
+
+      return;
+    }
+
+    switchPlayer();
+
+    boxes.forEach((box, index) => {
+      box.disabled = board[index] !== "";
+    });
+  }, 500);
+}
+
+/* Get Computer Move */
+function getComputerMove() {
+  const available = getAvailableMoves();
+
+  if (available.length === 0) {
+    return -1;
+  }
+
+  /* Easy */
+  if (aiDifficulty === "easy") {
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  /* Medium */
+  if (aiDifficulty === "medium") {
+    // 60% intelligent
+    // 40% random
+
+    if (Math.random() < 0.6) {
+      return getBestMove();
+    }
+
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  /* Hard */
+  return getBestMove();
+}
+
+/* Available Moves */
+function getAvailableMoves() {
+  const moves = [];
+
+  board.forEach((value, index) => {
+    if (value === "") {
+      moves.push(index);
+    }
+  });
+
+  return moves;
+}
+
+/* Best Move */
+function getBestMove() {
+  let bestScore = -Infinity;
+
+  let bestMove = -1;
+
+  for (const index of getAvailableMoves()) {
+    board[index] = "O";
+
+    const score = minimax(board, 0, false);
+
+    board[index] = "";
+
+    if (score > bestScore) {
+      bestScore = score;
+
+      bestMove = index;
+    }
+  }
+
+  return bestMove;
+}
+
+/* Minimax AI */
+function minimax(currentBoard, depth, maximizing) {
+  const result = evaluateBoard(currentBoard);
+
+  if (result !== null) {
+    return result - depth;
+  }
+
+  if (maximizing) {
+    let bestScore = -Infinity;
+
+    for (const index of getEmptyIndexes(currentBoard)) {
+      currentBoard[index] = "O";
+
+      const score = minimax(currentBoard, depth + 1, false);
+
+      currentBoard[index] = "";
+
+      bestScore = Math.max(bestScore, score);
+    }
+
+    return bestScore;
+  } else {
+    let bestScore = Infinity;
+
+    for (const index of getEmptyIndexes(currentBoard)) {
+      currentBoard[index] = "X";
+
+      const score = minimax(currentBoard, depth + 1, true);
+
+      currentBoard[index] = "";
+
+      bestScore = Math.min(bestScore, score);
+    }
+
+    return bestScore;
+  }
+}
+
+/* Evaluate Board */
+function evaluateBoard(currentBoard) {
+  for (const combination of winningCombinations) {
+    const [a, b, c] = combination;
+
+    if (
+      currentBoard[a] !== "" &&
+      currentBoard[a] === currentBoard[b] &&
+      currentBoard[a] === currentBoard[c]
+    ) {
+      if (currentBoard[a] === "O") {
+        return 10;
+      }
+
+      return -10;
+    }
+  }
+
+  if (currentBoard.every((cell) => cell !== "")) {
+    return 0;
+  }
+
+  return null;
+}
+
+/* Get Empty Indexes */
+function getEmptyIndexes(currentBoard) {
+  const indexes = [];
+
+  currentBoard.forEach((value, index) => {
+    if (value === "") {
+      indexes.push(index);
+    }
+  });
+
+  return indexes;
+}
+
+/* Set Game Mode */
+function setGameMode(mode) {
+  if (gameMode === mode) {
+    return;
+  }
+
+  gameMode = mode;
+
+  if (gameMode === "pvp") {
+    pvpButton.classList.add("active");
+
+    aiButton.classList.remove("active");
+
+    playerOName.textContent = "Player O";
+
+    difficultyContainer.style.display = "none";
+  } else {
+    aiButton.classList.add("active");
+
+    pvpButton.classList.remove("active");
+
+    playerOName.textContent = "Computer";
+
+    difficultyContainer.style.display = "block";
+  }
+
+  restartGame();
+}
+
+/* Difficult Change */
+difficultySelect.addEventListener("change", () => {
+  aiDifficulty = difficultySelect.value;
+
+  restartGame();
+});
+
+/* Restart Game */
+function restartGame() {
+  board.fill("");
+
+  currentPlayer = "X";
+
+  gameOver = false;
+
+  aiThinking = false;
+
+  moveCount = 0;
+
+  thinkingElement.style.display = "none";
+
+  boxes.forEach((box) => {
+    box.disabled = false;
+
+    box.classList.remove("activeBox");
+
+    const span = box.querySelector("span");
+
+    span.textContent = "";
+
+    span.dataset.player = "none";
+
+    span.classList.remove("x-move", "o-move");
+  });
+
+  updateTurnIndicator();
+
+  hideResult();
+}
+
+/* Restart Button */
+restartButton.addEventListener("click", restartGame);
+
+/* Game Mode Buttons */
+pvpButton.addEventListener("click", () => {
+  setGameMode("pvp");
+});
+
+aiButton.addEventListener("click", () => {
+  setGameMode("ai");
+});
+
+/* Add History */
+function addHistory(message, time) {
+  const item = document.createElement("li");
+
+  const messageSpan = document.createElement("span");
+
+  messageSpan.textContent = message;
+
+  const timeSpan = document.createElement("span");
+
+  timeSpan.textContent = time;
+
+  item.appendChild(messageSpan);
+
+  item.appendChild(timeSpan);
+
+  historyList.prepend(item);
+
+  // Keep history small
+  while (historyList.children.length > 10) {
+    historyList.removeChild(historyList.lastElementChild);
+  }
+}
+
+/* Show Result */
+function showResult(title, message, type) {
+  resultTitle.textContent = title;
+
+  resultMessage.textContent = message;
+
+  if (type === "draw") {
+    resultIcon.innerHTML = '<i class="fas fa-handshake"></i>';
+
+    resultIcon.style.color = "#6b7280";
+
+    resultIcon.style.background = "#f3f4f6";
+  } else {
+    resultIcon.innerHTML = '<i class="fas fa-trophy"></i>';
+
+    resultIcon.style.color = "#2563eb";
+
+    resultIcon.style.background = "#eff6ff";
+  }
+
+  modalOverlay.classList.add("show");
+}
+
+/* Hide Result */
+function hideResult() {
+  modalOverlay.classList.remove("show");
+}
+
+/* Play Again */
+playAgainButton.addEventListener("click", restartGame);
+
+/* Close Modal When we Click Outside */
+modalOverlay.addEventListener("click", (event) => {
+  if (event.target === modalOverlay) {
+    restartGame();
+  }
+});
+
+/* Initial Setup */
+difficultyContainer.style.display = "none";
+
+updateTurnIndicator();
